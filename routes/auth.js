@@ -44,11 +44,14 @@ router.post("/login-user", async function (req, res, next) {
     const username = req.body.username;
     const password = req.body.password;
     const collection = await blogsDB().collection("users")
-
     try {
         const user = await collection.findOne({
             username: username
         })
+        if (!user) {
+            res.json({ success: false }).status(204);
+            return;
+        }
         const match = await bcrypt.compare(password, user.password);
         if (match) {
             const jwtSecretKey = process.env.JWT_SECRET_KEY;
@@ -70,7 +73,6 @@ router.post("/login-user", async function (req, res, next) {
 router.get("/validate-token", function (req, res) {
     const tokenHeaderKey = process.env.TOKEN_HEADER_KEY;
     const jwtSecretKey = process.env.JWT_SECRET_KEY;
-
     try {
         const token = req.header(tokenHeaderKey);
         const verified = jwt.verify(token, jwtSecretKey);
@@ -85,8 +87,6 @@ router.get("/validate-token", function (req, res) {
         return res.status(401).json({ success: true, message: String(error) });
     }
 })
-
-
 
 
 module.exports = router
